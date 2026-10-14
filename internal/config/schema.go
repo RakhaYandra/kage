@@ -27,9 +27,10 @@ type Tracking struct {
 }
 
 type Security struct {
-	ProtectSecrets       bool `yaml:"protect_secrets"`
-	RedactOutput         bool `yaml:"redact_output"`
-	BlockDetectedSecrets bool `yaml:"block_detected_secrets"`
+	ProtectSecrets       bool     `yaml:"protect_secrets"`
+	RedactOutput         bool     `yaml:"redact_output"`
+	BlockDetectedSecrets bool     `yaml:"block_detected_secrets"`
+	AllowSecrets         []string `yaml:"allow_secrets,omitempty"`
 }
 
 type Snapshot struct {

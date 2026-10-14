@@ -76,7 +76,3 @@ shows diffs, restores selectively, and audits for secrets and drift.`,
 func stubErr(name string) error {
 	return fail(1, "%s: not implemented yet", name)
 }
-
-func newAudit() *cobra.Command {
-	return &cobra.Command{Use: "audit", Short: "Audit state and security", RunE: func(cmd *cobra.Command, args []string) error { return stubErr("audit") }}
-}

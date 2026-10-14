@@ -17,6 +17,7 @@ import (
 	"github.com/RakhaYandra/kage/internal/filesystem"
 	"github.com/RakhaYandra/kage/internal/gitstore"
 	"github.com/RakhaYandra/kage/internal/metadata"
+	"github.com/RakhaYandra/kage/internal/security"
 )
 
 // Options for Run.
@@ -104,6 +105,18 @@ func Run(home string, opts Options) (Result, error) {
 	entries, err := discovery.Scan(cfg.Tracking.Paths, cfg.Tracking.Exclude, home)
 	if err != nil {
 		return Result{}, err
+	}
+	if cfg.Security.ProtectSecrets && cfg.Security.BlockDetectedSecrets {
+		var gf []security.GateFile
+		for _, e := range entries {
+			if e.External {
+				continue
+			}
+			gf = append(gf, security.GateFile{Rel: e.Rel, Abs: e.Abs})
+		}
+		if err := security.Gate(gf, cfg.Security.AllowSecrets); err != nil {
+			return Result{}, err
+		}
 	}
 	current := map[string]FileMeta{}
 	for _, e := range entries {

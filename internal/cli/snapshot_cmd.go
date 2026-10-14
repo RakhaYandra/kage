@@ -1,10 +1,12 @@
 package cli
 
 import (
+	"errors"
 	"fmt"
 
 	"github.com/spf13/cobra"
 
+	"github.com/RakhaYandra/kage/internal/security"
 	"github.com/RakhaYandra/kage/internal/snapshot"
 )
 
@@ -17,6 +19,10 @@ func newSnapshot() *cobra.Command {
 		RunE: func(cmd *cobra.Command, args []string) error {
 			home := homeDir()
 			res, err := snapshot.Run(home, snapshot.Options{Message: message, DryRun: dryRun})
+			var blocked *security.BlockedError
+			if errors.As(err, &blocked) {
+				return fail(3, "%v", blocked)
+			}
 			if err != nil {
 				return fail(1, "%v", err)
 			}
