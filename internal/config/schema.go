@@ -34,14 +34,17 @@ type Security struct {
 }
 
 type Snapshot struct {
-	AutoCommit          bool `yaml:"auto_commit"`
-	SkipUnchanged       bool `yaml:"skip_unchanged"`
-	PreservePermissions bool `yaml:"preserve_permissions"`
+	AutoCommit          bool   `yaml:"auto_commit"`
+	SkipUnchanged       bool   `yaml:"skip_unchanged"`
+	PreservePermissions bool   `yaml:"preserve_permissions"`
+	Schedule            string `yaml:"schedule,omitempty"`
+	KeepLast            int    `yaml:"keep_last,omitempty"`
 }
 
 type Watcher struct {
-	Enabled      bool `yaml:"enabled"`
-	AutoSnapshot bool `yaml:"auto_snapshot"`
+	Enabled      bool   `yaml:"enabled"`
+	AutoSnapshot bool   `yaml:"auto_snapshot"`
+	QuietPeriod  string `yaml:"quiet_period,omitempty"`
 }
 
 // Default returns the v1 default config for home.

@@ -5,9 +5,13 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
 
 	"gopkg.in/yaml.v3"
 )
+
+// DefaultQuietPeriod applies when watcher.quiet_period is unset.
+const DefaultQuietPeriod = 5 * time.Minute
 
 // Expand turns ~/... into home/... and cleans the result.
 func Expand(p, home string) string {
@@ -54,7 +58,33 @@ func Validate(c Config, home string) error {
 			return fmt.Errorf("empty exclude pattern")
 		}
 	}
+	switch c.Snapshot.Schedule {
+	case "", "daily", "hourly":
+	default:
+		return fmt.Errorf("snapshot.schedule must be daily|hourly, got %q", c.Snapshot.Schedule)
+	}
+	if c.Snapshot.KeepLast < 0 {
+		return fmt.Errorf("snapshot.keep_last must be >= 0")
+	}
+	if _, err := QuietDuration(c); err != nil {
+		return err
+	}
 	return nil
+}
+
+// QuietDuration parses watcher.quiet_period ("" = DefaultQuietPeriod).
+func QuietDuration(c Config) (time.Duration, error) {
+	if strings.TrimSpace(c.Watcher.QuietPeriod) == "" {
+		return DefaultQuietPeriod, nil
+	}
+	d, err := time.ParseDuration(c.Watcher.QuietPeriod)
+	if err != nil {
+		return 0, fmt.Errorf("watcher.quiet_period: %w", err)
+	}
+	if d < 0 {
+		return 0, fmt.Errorf("watcher.quiet_period must be >= 0")
+	}
+	return d, nil
 }
 
 // Load reads and validates a config file.

@@ -35,6 +35,48 @@ func TestValidateDefaultOK(t *testing.T) {
 	}
 }
 
+func TestValidateSchedule(t *testing.T) {
+	home := t.TempDir()
+	for _, s := range []string{"", "daily", "hourly"} {
+		c := Default(home)
+		c.Snapshot.Schedule = s
+		if err := Validate(c, home); err != nil {
+			t.Errorf("schedule %q must validate: %v", s, err)
+		}
+	}
+	c := Default(home)
+	c.Snapshot.Schedule = "minutely"
+	if err := Validate(c, home); err == nil {
+		t.Errorf("schedule minutely must be rejected")
+	}
+}
+
+func TestValidateKeepLast(t *testing.T) {
+	home := t.TempDir()
+	c := Default(home)
+	c.Snapshot.KeepLast = -1
+	if err := Validate(c, home); err == nil {
+		t.Errorf("keep_last -1 must be rejected")
+	}
+	c.Snapshot.KeepLast = 30
+	if err := Validate(c, home); err != nil {
+		t.Errorf("keep_last 30 must validate: %v", err)
+	}
+}
+
+func TestValidateQuietPeriod(t *testing.T) {
+	home := t.TempDir()
+	c := Default(home)
+	c.Watcher.QuietPeriod = "bogus"
+	if err := Validate(c, home); err == nil {
+		t.Errorf("quiet_period bogus must be rejected")
+	}
+	c.Watcher.QuietPeriod = "10m"
+	if err := Validate(c, home); err != nil {
+		t.Errorf("quiet_period 10m must validate: %v", err)
+	}
+}
+
 func TestLoadRoundTrip(t *testing.T) {
 	home := t.TempDir()
 	p := filepath.Join(home, "config.yaml")
