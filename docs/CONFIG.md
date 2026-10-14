@@ -16,8 +16,12 @@ snapshot:
   auto_commit: true
   skip_unchanged: true
   preserve_permissions: true
+  schedule: ""         # ""|daily|hourly; informational for timer users
+  keep_last: 0         # 0 = keep all; enforced by `kage prune`
 watcher:
-  enabled: false       # P1, not implemented in MVP
+  enabled: false
+  auto_snapshot: false
+  quiet_period: 5m
 ```
 
 - Paths must stay inside `$HOME`. Symlinks to outside scope are never snapshotted.

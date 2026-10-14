@@ -13,6 +13,8 @@ kage diff --file .zshrc --summary-only
 kage restore --snapshot 12 --file ~/.zshrc --dry-run
 kage restore --snapshot 12 --file ~/.zshrc --yes
 kage audit                   # exit 0/2/3
+kage timer install           # daily snapshot timer (systemd user)
+kage prune --keep 30 --yes   # drop old records, keep last 30
 ```
 
 Exit codes: 0 ok · 1 error · 2 changes/drift/review · 3 conflict/secret-block.
