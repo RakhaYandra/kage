@@ -69,6 +69,43 @@ func (s Store) NextID() (int, error) {
 	return max + 1, nil
 }
 
+// Prune keeps the last keep records (keep <= 0 keeps all).
+// IDs are never reused. Git objects are untouched; run git gc to reclaim.
+func (s Store) Prune(keep int) (int, error) {
+	list, err := s.List()
+	if err != nil {
+		return 0, err
+	}
+	if keep <= 0 || len(list) <= keep {
+		return 0, nil
+	}
+	dropped := len(list) - keep
+	list = list[dropped:]
+	tmp := s.Path + ".kage-tmp"
+	f, err := os.OpenFile(tmp, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0o600)
+	if err != nil {
+		return 0, err
+	}
+	for _, sn := range list {
+		data, err := json.Marshal(sn)
+		if err != nil {
+			f.Close()
+			os.Remove(tmp)
+			return 0, err
+		}
+		if _, err := f.Write(append(data, '\n')); err != nil {
+			f.Close()
+			os.Remove(tmp)
+			return 0, err
+		}
+	}
+	if err := f.Close(); err != nil {
+		os.Remove(tmp)
+		return 0, err
+	}
+	return dropped, os.Rename(tmp, s.Path)
+}
+
 // Append adds one record (0600, parent 0700).
 func (s Store) Append(sn Snapshot) error {
 	if err := os.MkdirAll(filepath.Dir(s.Path), 0o700); err != nil {
