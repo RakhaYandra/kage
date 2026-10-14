@@ -1,12 +1,26 @@
 package tui
 
 import (
+	"fmt"
+	"strings"
+
 	"github.com/RakhaYandra/kage/internal/config"
+	"github.com/RakhaYandra/kage/internal/diff"
 	"github.com/RakhaYandra/kage/internal/metadata"
 	"github.com/RakhaYandra/kage/internal/restore"
 	"github.com/RakhaYandra/kage/internal/security"
 	"github.com/RakhaYandra/kage/internal/snapshot"
 )
+
+// maxDiffLines caps rendered diff output.
+const maxDiffLines = 500
+
+func redactMaybe(home, s string) string {
+	if cfg, err := config.Load(config.DefaultPath(home), home); err == nil && cfg.Security.RedactOutput {
+		return security.Redact(s)
+	}
+	return s
+}
 
 // New builds a Model wired to the real engines.
 func New(home string) (Model, error) {
@@ -45,10 +59,32 @@ func New(home string) (Model, error) {
 			if err != nil {
 				return "", err
 			}
-			if cfg, lerr := config.Load(config.DefaultPath(home), home); lerr == nil && cfg.Security.RedactOutput {
-				return security.Redact(res.Preview), nil
+			return redactMaybe(home, res.Preview), nil
+		},
+		diffFn: func(snap int, file string) (string, error) {
+			res, err := diff.Working(home, snap, file)
+			if err != nil {
+				return "", err
 			}
-			return res.Preview, nil
+			for _, f := range res.Files {
+				if f.Path != file {
+					continue
+				}
+				if f.Binary {
+					return "(binary, not shown)", nil
+				}
+				u := f.Unified
+				if u == "" {
+					return "(no textual diff)", nil
+				}
+				lines := strings.Split(u, "\n")
+				if len(lines) > maxDiffLines {
+					lines = append(lines[:maxDiffLines],
+						fmt.Sprintf("[truncated: %d lines total]", len(strings.Split(u, "\n"))))
+				}
+				return redactMaybe(home, strings.Join(lines, "\n")), nil
+			}
+			return "(no changes)", nil
 		},
 		applyFn: func(snap int, file string) (string, error) {
 			res, err := restore.Run(home, restore.Options{SnapshotID: snap, Files: []string{file}, Yes: true})
