@@ -40,7 +40,6 @@ func newLog() *cobra.Command {
 				fmt.Fprintf(out, "#%d %s %s [%s] +%d ~%d -%d\n",
 					s.ID, s.CreatedAt, s.Message, short, s.Added, s.Modified, s.Deleted)
 			}
-			_ = metadata.Snapshot{}
 			return nil
 		},
 	}

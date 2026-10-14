@@ -5,7 +5,6 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/RakhaYandra/kage/internal/config"
 	"github.com/RakhaYandra/kage/internal/diff"
 	"github.com/RakhaYandra/kage/internal/metadata"
 	"github.com/RakhaYandra/kage/internal/snapshot"
@@ -92,5 +91,3 @@ func lastRange(home string, n int) (int, int, error) {
 	}
 	return list[len(list)-n].ID, list[len(list)-1].ID, nil
 }
-
-var _ = config.DefaultPath

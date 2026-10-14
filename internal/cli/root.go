@@ -72,7 +72,3 @@ shows diffs, restores selectively, and audits for secrets and drift.`,
 	)
 	return root
 }
-
-func stubErr(name string) error {
-	return fail(1, "%s: not implemented yet", name)
-}
