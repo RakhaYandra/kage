@@ -17,6 +17,7 @@ const (
 	StateSnap    = "snapshots"
 	StatePreview = "preview"
 	StateDone    = "done"
+	StateDiff    = "diff"
 )
 
 // Snap is one snapshot option.
@@ -36,11 +37,40 @@ type Model struct {
 	selFile int
 	selSnap int
 	preview string
+	diff    string
 	result  string
 	err     string
 
+	scroll int
+	height int // visible diff lines; 0 = default
+
 	previewFn func(snap int, file string) (string, error)
 	applyFn   func(snap int, file string) (string, error)
+	diffFn    func(snap int, file string) (string, error)
+}
+
+// visibleHeight returns the diff window height.
+func (m Model) visibleHeight() int {
+	if m.height > 0 {
+		return m.height
+	}
+	return 20
+}
+
+// diffLines splits the loaded diff for rendering.
+func (m Model) diffLines() []string {
+	if m.diff == "" {
+		return nil
+	}
+	return strings.Split(m.diff, "\n")
+}
+
+func (m Model) maxScroll() int {
+	n := len(m.diffLines()) - m.visibleHeight()
+	if n < 0 {
+		return 0
+	}
+	return n
 }
 
 func (m Model) Init() tea.Cmd { return nil }
@@ -48,6 +78,16 @@ func (m Model) Init() tea.Cmd { return nil }
 var title = lipgloss.NewStyle().Bold(true).Render
 
 func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+	if ws, ok := msg.(tea.WindowSizeMsg); ok {
+		m.height = ws.Height - 6
+		if m.height < 5 {
+			m.height = 5
+		}
+		if m.scroll > m.maxScroll() {
+			m.scroll = m.maxScroll()
+		}
+		return m, nil
+	}
 	km, ok := msg.(tea.KeyMsg)
 	if !ok {
 		return m, nil
@@ -63,24 +103,77 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case 'q':
 			return m, tea.Quit
 		case 'k':
-			return m.move(-1), nil
+			return m.up(), nil
 		case 'j':
-			return m.move(1), nil
+			return m.down(), nil
 		case 'y':
 			if m.State == StatePreview {
 				return m.confirm(), nil
+			}
+		case 'd':
+			if m.State == StateFiles {
+				return m.showDiff(), nil
 			}
 		}
 	}
 	switch km.Type {
 	case tea.KeyUp:
-		return m.move(-1), nil
+		return m.up(), nil
 	case tea.KeyDown:
-		return m.move(1), nil
+		return m.down(), nil
 	case tea.KeyEnter:
 		return m.enter(), nil
 	}
 	return m, nil
+}
+
+// up moves the list cursor, or scrolls the diff view.
+func (m Model) up() Model {
+	if m.State == StateDiff {
+		m.scroll--
+		if m.scroll < 0 {
+			m.scroll = 0
+		}
+		return m
+	}
+	return m.move(-1)
+}
+
+// down moves the list cursor, or scrolls the diff view.
+func (m Model) down() Model {
+	if m.State == StateDiff {
+		m.scroll++
+		if max := m.maxScroll(); m.scroll > max {
+			m.scroll = max
+		}
+		return m
+	}
+	return m.move(1)
+}
+
+// showDiff loads the full unified diff for the selected file.
+func (m Model) showDiff() Model {
+	if len(m.Files) == 0 {
+		return m
+	}
+	m.selFile = m.Cursor
+	if m.diffFn == nil {
+		m.err = "diff unavailable"
+		return m
+	}
+	snap := 0
+	if len(m.Snaps) > 0 {
+		snap = m.Snaps[len(m.Snaps)-1].ID
+	}
+	d, err := m.diffFn(snap, m.Files[m.selFile])
+	if err != nil {
+		m.err = err.Error()
+		return m
+	}
+	m.diff = d
+	m.scroll = 0
+	m.State = StateDiff
+	return m
 }
 
 func (m Model) count() int {
@@ -117,6 +210,9 @@ func (m Model) back() Model {
 		m.State = StateFiles
 	case StatePreview:
 		m.State = StateSnap
+	case StateDiff:
+		m.State = StateFiles
+		m.scroll = 0
 	}
 	return m
 }
@@ -175,7 +271,7 @@ func (m Model) View() string {
 			}
 			sb.WriteString(fmt.Sprintf("%s%s\n", mark, f))
 		}
-		sb.WriteString("\nenter: snapshots · q: quit\n")
+		sb.WriteString("\nenter: snapshots · d: diff · q: quit\n")
 	case StateSnap:
 		sb.WriteString(title(fmt.Sprintf("Restore %s from?", m.Files[m.selFile])) + "\n\n")
 		for i, s := range m.Snaps {
@@ -193,6 +289,18 @@ func (m Model) View() string {
 	case StateDone:
 		sb.WriteString(title("Restored") + "\n\n" + m.result + "\n")
 		sb.WriteString("\nq: quit\n")
+	case StateDiff:
+		sb.WriteString(title(fmt.Sprintf("Diff %s", m.Files[m.selFile])) + "\n\n")
+		lines := m.diffLines()
+		h := m.visibleHeight()
+		end := m.scroll + h
+		if end > len(lines) {
+			end = len(lines)
+		}
+		for _, l := range lines[m.scroll:end] {
+			sb.WriteString(l + "\n")
+		}
+		sb.WriteString(fmt.Sprintf("\nline %d-%d/%d · j/k scroll · esc: back\n", m.scroll+1, end, len(lines)))
 	}
 	if m.err != "" {
 		sb.WriteString("\nerror: " + m.err + "\n")
