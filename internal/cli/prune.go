@@ -2,6 +2,8 @@ package cli
 
 import (
 	"fmt"
+	"os"
+	"path/filepath"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -10,6 +12,31 @@ import (
 	"github.com/RakhaYandra/kage/internal/metadata"
 	"github.com/RakhaYandra/kage/internal/snapshot"
 )
+
+// trimLog keeps the last keep lines of path; missing file is skipped.
+func trimLog(path string, keep int) (int, error) {
+	data, err := os.ReadFile(path)
+	if err != nil {
+		if os.IsNotExist(err) {
+			return 0, nil
+		}
+		return 0, err
+	}
+	lines := strings.Split(string(data), "\n")
+	if lines[len(lines)-1] == "" {
+		lines = lines[:len(lines)-1]
+	}
+	if len(lines) <= keep {
+		return 0, nil
+	}
+	dropped := len(lines) - keep
+	rest := strings.Join(lines[dropped:], "\n") + "\n"
+	tmp := path + ".kage-tmp"
+	if err := os.WriteFile(tmp, []byte(rest), 0o600); err != nil {
+		return 0, err
+	}
+	return dropped, os.Rename(tmp, path)
+}
 
 func newPrune() *cobra.Command {
 	var keep, keepFlag int
@@ -57,6 +84,16 @@ func newPrune() *cobra.Command {
 				return fail(1, "%v", err)
 			}
 			fmt.Fprintf(out, "dropped %d record(s); run git gc in the repository to reclaim objects\n", dropped)
+			state := snapshot.StateDir(home)
+			for _, name := range []string{"watch.log", "restore.log"} {
+				n, err := trimLog(filepath.Join(state, name), keep)
+				if err != nil {
+					return fail(1, "trim %s: %v", name, err)
+				}
+				if n > 0 {
+					fmt.Fprintf(out, "trimmed %d line(s) from %s\n", n, name)
+				}
+			}
 			return nil
 		},
 	}
