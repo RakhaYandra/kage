@@ -31,7 +31,7 @@ func setupRedactHome(t *testing.T, redact bool) string {
 	if _, err := snapshot.Run(home, snapshot.Options{Message: "base"}); err != nil {
 		t.Fatal(err)
 	}
-	os.WriteFile(filepath.Join(home, ".myapp"), []byte("token = ghp_" + "ZZZZZZZZZZZZZZZZZZZZZZZZ\n"), 0o644)
+	os.WriteFile(filepath.Join(home, ".myapp"), []byte("token = ghp_"+"ZZZZZZZZZZZZZZZZZZZZZZZZ\n"), 0o644)
 	return home
 }
 
@@ -42,7 +42,7 @@ func TestDiffRedactsSecrets(t *testing.T) {
 	root.SetOut(&out)
 	root.SetArgs([]string{"diff", "--file", ".myapp"})
 	_ = root.Execute() // exit 2 on changes; ignore
-	if got := out.String(); containsStr(got, redactSecret) || containsStr(got, "ghp_" + "ZZZZZZZZZZZZZZZZZZZZZZZZ") {
+	if got := out.String(); containsStr(got, redactSecret) || containsStr(got, "ghp_"+"ZZZZZZZZZZZZZZZZZZZZZZZZ") {
 		t.Fatalf("secret leaked in diff:\n%s", got)
 	}
 	if got := out.String(); !containsStr(got, "****") {
@@ -57,7 +57,7 @@ func TestDiffRawWhenRedactOff(t *testing.T) {
 	root.SetOut(&out)
 	root.SetArgs([]string{"diff", "--file", ".myapp"})
 	_ = root.Execute()
-	if got := out.String(); !containsStr(got, "ghp_" + "ZZZZZZZZZZZZZZZZZZZZZZZZ") {
+	if got := out.String(); !containsStr(got, "ghp_"+"ZZZZZZZZZZZZZZZZZZZZZZZZ") {
 		t.Fatalf("redact off must show raw content:\n%s", got)
 	}
 }
@@ -69,7 +69,7 @@ func TestRestorePreviewRedactsSecrets(t *testing.T) {
 	root.SetOut(&out)
 	root.SetArgs([]string{"restore", "--snapshot", "1", "--file", ".myapp", "--dry-run"})
 	_ = root.Execute()
-	if got := out.String(); containsStr(got, redactSecret) || containsStr(got, "ghp_" + "ZZZZZZZZZZZZZZZZZZZZZZZZ") {
+	if got := out.String(); containsStr(got, redactSecret) || containsStr(got, "ghp_"+"ZZZZZZZZZZZZZZZZZZZZZZZZ") {
 		t.Fatalf("secret leaked in restore preview:\n%s", got)
 	}
 }

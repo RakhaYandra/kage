@@ -26,7 +26,7 @@ func setupLoadHome(t *testing.T) string {
 	if _, err := snapshot.Run(home, snapshot.Options{Message: "base"}); err != nil {
 		t.Fatal(err)
 	}
-	os.WriteFile(filepath.Join(home, ".myapp"), []byte("token = ghp_" + "BBBBBBBBBBBBBBBBBBBBBBBB\nother = 1\n"), 0o644)
+	os.WriteFile(filepath.Join(home, ".myapp"), []byte("token = ghp_"+"BBBBBBBBBBBBBBBBBBBBBBBB\nother = 1\n"), 0o644)
 	return home
 }
 
@@ -46,7 +46,7 @@ func TestDiffFnShowsUnifiedRedacted(t *testing.T) {
 	if !strings.Contains(d, "-") || !strings.Contains(d, "+") {
 		t.Fatalf("want unified markers, got:\n%s", d)
 	}
-	if strings.Contains(d, loadSecret) || strings.Contains(d, "ghp_" + "BBBBBBBBBBBBBBBBBBBBBBBB") {
+	if strings.Contains(d, loadSecret) || strings.Contains(d, "ghp_"+"BBBBBBBBBBBBBBBBBBBBBBBB") {
 		t.Fatalf("secret leaked in tui diff:\n%s", d)
 	}
 }

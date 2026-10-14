@@ -11,7 +11,7 @@ func TestKnownFixturesDetected(t *testing.T) {
 		"id_rsa":           "-----" + "BEGIN RSA PRIVATE KEY-----\nabc\n",
 		"key.pem":          "-----" + "BEGIN PRIVATE KEY-----\nabc\n",
 		".env":             "API_KEY=supersecret123\n",
-		"credentials.json": `{"token": "ghp_" + "abcdefghijklmnopqrst"}` + "\n",
+		"credentials.json": "{\"token\": \"ghp_\" + \"abcdefghijklmnopqrst\"}" + "\n",
 		"aws.txt":          "AKIA" + "IOSFODNN7EXAMPLE\n",
 		"token.conf":       "password = hunter2hunter2\n",
 		"github.txt":       "ghp_" + "abcdefghijklmnopqrstuvwx\n",
