@@ -77,10 +77,6 @@ func stubErr(name string) error {
 	return fail(1, "%s: not implemented yet", name)
 }
 
-func newRestore() *cobra.Command {
-	return &cobra.Command{Use: "restore", Short: "Restore files", RunE: func(cmd *cobra.Command, args []string) error { return stubErr("restore") }}
-}
-
 func newAudit() *cobra.Command {
 	return &cobra.Command{Use: "audit", Short: "Audit state and security", RunE: func(cmd *cobra.Command, args []string) error { return stubErr("audit") }}
 }

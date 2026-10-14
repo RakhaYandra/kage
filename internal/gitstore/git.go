@@ -95,6 +95,17 @@ func Show(repo, path string) ([]byte, error) {
 // ResetHard aborts a failed snapshot.
 func ResetHard(repo string) error { return run(repo, "reset", "-q", "--hard", "HEAD") }
 
+// Exists reports whether a commit exists.
+func Exists(repo, commit string) bool {
+	cmd := exec.Command("git", "cat-file", "-e", commit)
+	cmd.Dir = repo
+	cmd.Env = append(os.Environ(),
+		"GIT_CONFIG_NOSYSTEM=1",
+		"GIT_CONFIG_GLOBAL=/dev/null",
+	)
+	return cmd.Run() == nil
+}
+
 // ShowAt returns file content at a commit (err if missing).
 func ShowAt(repo, commit, path string) ([]byte, error) {
 	cmd := exec.Command("git", "show", commit+":"+path)
