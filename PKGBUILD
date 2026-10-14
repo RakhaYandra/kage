@@ -1,6 +1,6 @@
 # Maintainer: RakhaYandra
 pkgname=kage
-pkgver=0.2.0
+pkgver=0.3.0
 pkgrel=1
 pkgdesc="Configuration state manager: snapshot, diff, restore Linux configs"
 arch=('x86_64' 'aarch64')
