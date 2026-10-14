@@ -77,10 +77,6 @@ func stubErr(name string) error {
 	return fail(1, "%s: not implemented yet", name)
 }
 
-func newSnapshot() *cobra.Command {
-	return &cobra.Command{Use: "snapshot", Short: "Take a snapshot", RunE: func(cmd *cobra.Command, args []string) error { return stubErr("snapshot") }}
-}
-
 func newDiff() *cobra.Command {
 	return &cobra.Command{Use: "diff", Short: "Show changes", RunE: func(cmd *cobra.Command, args []string) error { return stubErr("diff") }}
 }
@@ -91,10 +87,6 @@ func newRestore() *cobra.Command {
 
 func newAudit() *cobra.Command {
 	return &cobra.Command{Use: "audit", Short: "Audit state and security", RunE: func(cmd *cobra.Command, args []string) error { return stubErr("audit") }}
-}
-
-func newStatus() *cobra.Command {
-	return &cobra.Command{Use: "status", Short: "Show working state", RunE: func(cmd *cobra.Command, args []string) error { return stubErr("status") }}
 }
 
 func newLog() *cobra.Command {
