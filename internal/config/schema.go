@@ -40,7 +40,8 @@ type Snapshot struct {
 }
 
 type Watcher struct {
-	Enabled bool `yaml:"enabled"`
+	Enabled      bool `yaml:"enabled"`
+	AutoSnapshot bool `yaml:"auto_snapshot"`
 }
 
 // Default returns the v1 default config for home.
