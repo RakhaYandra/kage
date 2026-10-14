@@ -1,4 +1,4 @@
-.PHONY: build run vet test race lint clean install ci release
+.PHONY: build run vet test race lint clean install ci release aur-tarball
 
 PREFIX ?= $(HOME)/.local
 VERSION ?= $(shell git describe --tags --always --dirty 2>/dev/null || echo dev)
@@ -36,3 +36,6 @@ ci: lint test
 
 clean:
 	rm -rf bin/ dist/
+
+aur-tarball:
+	git archive --format=tar.gz --prefix=kage-$(VERSION)/ -o dist/kage-$(VERSION).tar.gz HEAD

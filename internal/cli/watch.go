@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"sync"
 	"time"
 
 	"github.com/spf13/cobra"
@@ -65,7 +66,10 @@ func newWatch() *cobra.Command {
 			ctx, _ := signalCtx()
 			out := cmd.OutOrStdout()
 			fmt.Fprintln(out, "watching (Ctrl-C to stop)")
+			var mu sync.Mutex // debounce timers fire concurrently; keep git ops serial
 			w := &watcher.Watcher{OnEvent: func(e watcher.Event) {
+				mu.Lock()
+				defer mu.Unlock()
 				appendWatchLog(home, e)
 				fmt.Fprintf(out, "%s %s\n", e.Kind, e.Rel)
 				if auto {

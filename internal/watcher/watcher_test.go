@@ -29,7 +29,7 @@ func collect(t *testing.T, home string, dur time.Duration, act func()) []Event {
 	defer cancel()
 	var mu sync.Mutex
 	var got []Event
-	w := &Watcher{OnEvent: func(e Event) {
+	w := &Watcher{Debounce: 150 * time.Millisecond, ReconcileEvery: -1, OnEvent: func(e Event) {
 		mu.Lock()
 		got = append(got, e)
 		mu.Unlock()
@@ -41,16 +41,19 @@ func collect(t *testing.T, home string, dur time.Duration, act func()) []Event {
 	time.Sleep(dur)
 	cancel()
 	<-runErr
-	return got
+	time.Sleep(300 * time.Millisecond) // let in-flight debounce fire
+	mu.Lock()
+	defer mu.Unlock()
+	return append([]Event(nil), got...)
 }
 
 func TestDetectsCreateModifyDelete(t *testing.T) {
 	home := testHome(t)
-	got := collect(t, home, 900*time.Millisecond, func() {
+	got := collect(t, home, 800*time.Millisecond, func() {
 		os.WriteFile(filepath.Join(home, ".config", "app", "b.conf"), []byte("b\n"), 0o644)
-		time.Sleep(700 * time.Millisecond) // separate debounce windows
+		time.Sleep(400 * time.Millisecond) // separate debounce windows
 		os.WriteFile(filepath.Join(home, ".config", "app", "a.conf"), []byte("a2\n"), 0o644)
-		time.Sleep(700 * time.Millisecond)
+		time.Sleep(400 * time.Millisecond)
 		os.Remove(filepath.Join(home, ".config", "app", "b.conf"))
 	})
 	kinds := map[string]bool{}
@@ -74,7 +77,7 @@ func TestDetectsCreateModifyDelete(t *testing.T) {
 
 func TestDebounceCoalescesBurst(t *testing.T) {
 	home := testHome(t)
-	got := collect(t, home, 1200*time.Millisecond, func() {
+	got := collect(t, home, 1500*time.Millisecond, func() {
 		for i := 0; i < 10; i++ {
 			os.WriteFile(filepath.Join(home, ".config", "app", "a.conf"), []byte("x\n"), 0o644)
 			time.Sleep(20 * time.Millisecond)
@@ -93,7 +96,7 @@ func TestDebounceCoalescesBurst(t *testing.T) {
 
 func TestRenameDetected(t *testing.T) {
 	home := testHome(t)
-	got := collect(t, home, 900*time.Millisecond, func() {
+	got := collect(t, home, 1200*time.Millisecond, func() {
 		os.Rename(filepath.Join(home, ".config", "app", "a.conf"),
 			filepath.Join(home, ".config", "app", "renamed.conf"))
 	})
