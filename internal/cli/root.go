@@ -69,6 +69,7 @@ shows diffs, restores selectively, and audits for secrets and drift.`,
 	root.AddCommand(
 		newInit(), newSnapshot(), newDiff(), newRestore(), newAudit(),
 		newStatus(), newLog(), newTrack(), newConfigCmd(), newVersion(),
+		newWatch(),
 	)
 	return root
 }

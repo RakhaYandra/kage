@@ -20,11 +20,13 @@ func newStatus() *cobra.Command {
 			}
 			if !st.Drift {
 				fmt.Fprintln(cmd.OutOrStdout(), "clean")
+				fmt.Fprintln(cmd.OutOrStdout(), watcherLine(home))
 				return nil
 			}
 			for _, c := range st.Changed {
 				fmt.Fprintln(cmd.OutOrStdout(), c)
 			}
+			fmt.Fprintln(cmd.OutOrStdout(), watcherLine(home))
 			return fail(2, "drift: %d files changed", len(st.Changed))
 		},
 	}
