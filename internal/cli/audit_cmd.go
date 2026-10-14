@@ -9,12 +9,24 @@ import (
 )
 
 func newAudit() *cobra.Command {
-	var onlySecurity, onlyCoverage bool
+	var onlySecurity, onlyCoverage, history bool
+	var histN int
 	cmd := &cobra.Command{
 		Use:   "audit",
 		Short: "Audit state drift, coverage and security (read-only)",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			home := homeDir()
+			if history {
+				lines, err := audit.History(home, histN)
+				if err != nil {
+					return fail(1, "%v", err)
+				}
+				out := cmd.OutOrStdout()
+				for _, l := range lines {
+					fmt.Fprintln(out, l)
+				}
+				return nil
+			}
 			rep, err := audit.Run(home)
 			if err != nil {
 				return fail(1, "%v", err)
@@ -67,5 +79,7 @@ func newAudit() *cobra.Command {
 	}
 	cmd.Flags().BoolVar(&onlySecurity, "security", false, "show only security findings")
 	cmd.Flags().BoolVar(&onlyCoverage, "coverage", false, "show only coverage suggestions")
+	cmd.Flags().BoolVar(&history, "history", false, "show event history (snapshots, restores, watch)")
+	cmd.Flags().IntVarP(&histN, "last", "n", 0, "limit history to last N rows")
 	return cmd
 }
