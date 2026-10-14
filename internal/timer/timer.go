@@ -106,16 +106,15 @@ func Uninstall(dir string, run Runner) error {
 	return nil
 }
 
-// Status reports active|inactive|not-installed.
+// Status reports active|inactive|installed (unknown runtime)|not-installed.
 func Status(dir string, run Runner) (string, error) {
 	if _, err := os.Stat(filepath.Join(dir, "kage-snapshot.timer")); os.IsNotExist(err) {
 		return "not-installed", nil
 	}
 	if err := run("systemctl", "--user", "is-active", "--quiet", "kage-snapshot.timer"); err != nil {
-		if wrapMissing("status", err) != nil {
-			if _, ok := wrapMissing("status", err).(*MissingSystemdError); ok {
-				return "unknown (no systemctl)", nil
-			}
+		var missing *MissingSystemdError
+		if errors.As(wrapMissing("status", err), &missing) {
+			return "installed (unknown runtime)", nil
 		}
 		return "inactive", nil
 	}

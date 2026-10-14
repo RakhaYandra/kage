@@ -67,6 +67,40 @@ func TestUninstallDisablesAndRemoves(t *testing.T) {
 	}
 }
 
+func TestStatusWithoutSystemctl(t *testing.T) {
+	dir := t.TempDir()
+	fr := &fakeRunner{}
+	if err := Install(dir, fr.run); err != nil {
+		t.Fatal(err)
+	}
+	missing := func(args ...string) error {
+		return errors.New(`executable file not found in $PATH`)
+	}
+	st, err := Status(dir, missing)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if st != "installed (unknown runtime)" {
+		t.Fatalf("status=%q", st)
+	}
+	st, err = Status(t.TempDir(), missing)
+	if err != nil || st != "not-installed" {
+		t.Fatalf("status=%q err=%v", st, err)
+	}
+}
+
+func TestStatusInactiveOnPlainError(t *testing.T) {
+	dir := t.TempDir()
+	fr := &fakeRunner{}
+	if err := Install(dir, fr.run); err != nil {
+		t.Fatal(err)
+	}
+	st, err := Status(dir, func(args ...string) error { return errors.New("exit status 3") })
+	if err != nil || st != "inactive" {
+		t.Fatalf("status=%q err=%v", st, err)
+	}
+}
+
 func TestNoSystemctlFriendlyError(t *testing.T) {
 	dir := t.TempDir()
 	err := Install(dir, func(args ...string) error {
