@@ -58,7 +58,7 @@ func newDiff() *cobra.Command {
 						continue
 					}
 					if f.Unified != "" {
-						fmt.Fprintf(out, "\n--- %s (%s) ---\n%s", f.Path, f.Kind, f.Unified)
+						fmt.Fprintf(out, "\n--- %s (%s) ---\n%s", f.Path, f.Kind, redactForDisplay(home, f.Unified))
 						if f.Truncated {
 							fmt.Fprintln(out, "[truncated]")
 						}

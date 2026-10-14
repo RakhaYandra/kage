@@ -1,8 +1,10 @@
 package tui
 
 import (
+	"github.com/RakhaYandra/kage/internal/config"
 	"github.com/RakhaYandra/kage/internal/metadata"
 	"github.com/RakhaYandra/kage/internal/restore"
+	"github.com/RakhaYandra/kage/internal/security"
 	"github.com/RakhaYandra/kage/internal/snapshot"
 )
 
@@ -42,6 +44,9 @@ func New(home string) (Model, error) {
 			res, err := restore.Run(home, restore.Options{SnapshotID: snap, Files: []string{file}, DryRun: true})
 			if err != nil {
 				return "", err
+			}
+			if cfg, lerr := config.Load(config.DefaultPath(home), home); lerr == nil && cfg.Security.RedactOutput {
+				return security.Redact(res.Preview), nil
 			}
 			return res.Preview, nil
 		},

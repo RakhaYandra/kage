@@ -33,7 +33,7 @@ func newRestore() *cobra.Command {
 			}
 			out := cmd.OutOrStdout()
 			if preview.Preview != "" {
-				fmt.Fprintln(out, preview.Preview)
+				fmt.Fprintln(out, redactForDisplay(home, preview.Preview))
 				fmt.Fprintln(out)
 			}
 			if len(preview.Restored) == 0 {
