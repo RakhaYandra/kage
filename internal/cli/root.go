@@ -100,11 +100,3 @@ func newStatus() *cobra.Command {
 func newLog() *cobra.Command {
 	return &cobra.Command{Use: "log", Short: "Show snapshot history", RunE: func(cmd *cobra.Command, args []string) error { return stubErr("log") }}
 }
-
-func newTrack() *cobra.Command {
-	return &cobra.Command{Use: "track", Short: "Manage tracked paths", RunE: func(cmd *cobra.Command, args []string) error { return stubErr("track") }}
-}
-
-func newConfigCmd() *cobra.Command {
-	return &cobra.Command{Use: "config", Short: "Config operations", RunE: func(cmd *cobra.Command, args []string) error { return stubErr("config") }}
-}

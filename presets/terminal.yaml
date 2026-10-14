@@ -1,0 +1,4 @@
+paths:
+  - ~/.config/alacritty
+  - ~/.config/kitty
+  - ~/.config/wezterm

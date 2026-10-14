@@ -1,0 +1,4 @@
+paths:
+  - ~/.bashrc
+  - ~/.zshrc
+  - ~/.config/fish
