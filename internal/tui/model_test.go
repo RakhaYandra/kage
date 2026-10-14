@@ -2,6 +2,7 @@ package tui
 
 import (
 	"errors"
+	"strings"
 	"testing"
 
 	tea "github.com/charmbracelet/bubbletea"
@@ -173,5 +174,15 @@ func TestEscGoesBack(t *testing.T) {
 	m3, _ := m2.(Model).Update(key("esc"))
 	if m3.(Model).State != StateFiles {
 		t.Fatalf("state=%q", m3.(Model).State)
+	}
+}
+
+func TestDiffViewRendersWindow(t *testing.T) {
+	m := diffModel()
+	m.height = 2
+	m2, _ := m.Update(key("d"))
+	v := m2.(Model).View()
+	if !strings.Contains(v, "line 1-2/5") {
+		t.Fatalf("view:\n%s", v)
 	}
 }

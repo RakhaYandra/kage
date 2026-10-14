@@ -45,9 +45,11 @@ overrides the unit directory (tests, containers).
 kage tui
 ```
 
-Keys: `j/k` or arrows move, `enter` next, `esc` back, `y` confirm restore,
+Keys: `j/k` or arrows move, `enter` next, `d` unified diff (scroll with
+`j/k`, window follows terminal height), `esc` back, `y` confirm restore,
 `q` quit. Restore always shows the engine preview first; conflicts and
-checkpoints behave exactly like `kage restore`.
+checkpoints behave exactly like `kage restore`. Diff output is capped at
+500 lines and honors `redact_output`.
 
 ## Scheduled snapshots
 
